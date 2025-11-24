@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -57,6 +58,10 @@ var (
 		Name: "qingping_last_update_timestamp",
 		Help: "Timestamp of last sensor update",
 	}, []string{"device"})
+
+	// Track last update time for each device to expire stale metrics
+	lastUpdateTimes = make(map[string]time.Time)
+	lastUpdateMutex sync.RWMutex
 )
 
 type Config struct {
@@ -174,6 +179,17 @@ func main() {
 		}
 	}()
 
+	// Setup periodic cleanup of stale metrics
+	// Check every updateInterval seconds for expired metrics
+	cleanupTicker := time.NewTicker(time.Duration(config.UpdateInterval) * time.Second)
+	defer cleanupTicker.Stop()
+
+	go func() {
+		for range cleanupTicker.C {
+			cleanupStaleMetrics(config.UpdateInterval)
+		}
+	}()
+
 	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
@@ -220,6 +236,33 @@ func sendConfigMessage(client mqtt.Client, config Config) {
 	} else {
 		log.Printf("Sent Type 12 config to %s (interval: %ds, duration: %ds)",
 			downTopic, config.UpdateInterval, config.Duration)
+	}
+}
+
+func cleanupStaleMetrics(updateInterval int) {
+	// Expire metrics after 2x the update interval
+	expirationDuration := time.Duration(updateInterval*2) * time.Second
+
+	lastUpdateMutex.Lock()
+	defer lastUpdateMutex.Unlock()
+
+	now := time.Now()
+	for deviceName, lastTime := range lastUpdateTimes {
+		if now.Sub(lastTime) > expirationDuration {
+			log.Printf("Device '%s' has not responded in %v, removing stale metrics", deviceName, now.Sub(lastTime))
+
+			// Delete all metrics for this device
+			temperature.DeleteLabelValues(deviceName)
+			humidity.DeleteLabelValues(deviceName)
+			co2.DeleteLabelValues(deviceName)
+			pm25.DeleteLabelValues(deviceName)
+			pm10.DeleteLabelValues(deviceName)
+			tvoc.DeleteLabelValues(deviceName)
+			battery.DeleteLabelValues(deviceName)
+
+			// Remove from tracking map
+			delete(lastUpdateTimes, deviceName)
+		}
 	}
 }
 
@@ -283,7 +326,13 @@ func handleCGDN1Message(msg mqtt.Message, deviceName string) {
 	}
 
 	// Update last update timestamp
-	lastUpdate.WithLabelValues(deviceName).Set(float64(time.Now().Unix()))
+	now := time.Now()
+	lastUpdate.WithLabelValues(deviceName).Set(float64(now.Unix()))
+
+	// Track update time for metric expiration
+	lastUpdateMutex.Lock()
+	lastUpdateTimes[deviceName] = now
+	lastUpdateMutex.Unlock()
 
 	// Log the data
 	log.Printf("[%s] Temp: %.1f°C, Humidity: %.1f%%, CO2: %d ppm, PM2.5: %.1f μg/m³, PM10: %.1f μg/m³, TVOC: %.0f ppb, Battery: %d%%",
@@ -296,9 +345,6 @@ func handleCGDN1Message(msg mqtt.Message, deviceName string) {
 		sensorData.TVOC,
 		sensorData.Battery,
 	)
-
-	// TODO: Write to InfluxDB or expose Prometheus metrics
-	// writeToDB(sensorData, deviceName)
 }
 
 func limitString(s string, max int) string {
