@@ -1,0 +1,42 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - 1883:1883 # MQTT
+      - 9001:9001 # WebSocket (optional)
+    environment:
+      - TZ=America/Los_Angeles
+    user: "99:100" # nobody:users
+    volumes:
+      - /mnt/user/appdata/mosquitto/config:/mosquitto/config
+      - /mnt/user/appdata/mosquitto/data:/mosquitto/data
+      - /mnt/user/appdata/mosquitto/log:/mosquitto/log
+    networks:
+      - mqtt
+
+  qingping-collector:
+    image: ghcr.io/mike1808/qingping-air-monitor-lite-collector
+    restart: unless-stopped
+    ports:
+      - "9273:9273"  # Prometheus metrics
+    environment:
+      - TZ=America/Los_Angeles
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_USERNAME=           # Optional: MQTT username
+      - MQTT_PASSWORD=           # Optional: MQTT password
+      - DEVICE_MAC=              # Your CGDN1 MAC address (no colons!)
+      - DEVICE_NAME=air-sensor
+      # Device will report data every UPDATE_INTERVAL seconds for DURATION seconds
+      - UPDATE_INTERVAL=60       # Request data every 60 seconds
+      - DURATION=21600           # Continue reporting for 6 hours (21600 seconds)
+      - METRICS_PORT=9273        # Prometheus metrics port
+    depends_on:
+      - mosquitto
+    networks:
+      - mqtt
+
+networks:
+  mqtt: {}

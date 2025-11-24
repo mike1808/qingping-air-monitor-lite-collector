@@ -1,4 +1,4 @@
-module github.com/mike1808/qingping-collector
+module github.com/mike1808/qingping-air-monitor-lite-collector
 
 go 1.24.0
 
