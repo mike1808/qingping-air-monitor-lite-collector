@@ -1,4 +1,41 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Select your Prometheus datasource",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "gauge",
+      "name": "Gauge",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": []
   },
@@ -49,7 +86,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -59,7 +98,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "qingping_temperature_celsius",
+          "expr": "qingping_temperature_celsius{instance=~\"$instance\",device=~\"$device\"}",
           "refId": "A"
         }
       ],
@@ -115,7 +154,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -125,7 +166,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "qingping_humidity_percent",
+          "expr": "qingping_humidity_percent{instance=~\"$instance\",device=~\"$device\"}",
           "refId": "A"
         }
       ],
@@ -177,7 +218,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -187,7 +230,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "qingping_co2_ppm",
+          "expr": "qingping_co2_ppm{instance=~\"$instance\",device=~\"$device\"}",
           "refId": "A"
         }
       ],
@@ -235,7 +278,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -245,7 +290,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "qingping_battery_percent",
+          "expr": "qingping_battery_percent{instance=~\"$instance\",device=~\"$device\"}",
           "refId": "A"
         }
       ],
@@ -314,7 +359,12 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull", "max", "min"],
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max",
+            "min"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -326,7 +376,7 @@
       },
       "targets": [
         {
-          "expr": "qingping_temperature_celsius",
+          "expr": "qingping_temperature_celsius{instance=~\"$instance\",device=~\"$device\"}",
           "legendFormat": "Temperature",
           "refId": "A"
         }
@@ -396,7 +446,12 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull", "max", "min"],
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max",
+            "min"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -408,7 +463,7 @@
       },
       "targets": [
         {
-          "expr": "qingping_co2_ppm",
+          "expr": "qingping_co2_ppm{instance=~\"$instance\",device=~\"$device\"}",
           "legendFormat": "CO2",
           "refId": "A"
         }
@@ -478,7 +533,11 @@
       "id": 7,
       "options": {
         "legend": {
-          "calcs": ["mean", "lastNotNull", "max"],
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -490,12 +549,12 @@
       },
       "targets": [
         {
-          "expr": "qingping_pm25_ugm3",
+          "expr": "qingping_pm25_ugm3{instance=~\"$instance\",device=~\"$device\"}",
           "legendFormat": "PM2.5",
           "refId": "A"
         },
         {
-          "expr": "qingping_pm10_ugm3",
+          "expr": "qingping_pm10_ugm3{instance=~\"$instance\",device=~\"$device\"}",
           "legendFormat": "PM10",
           "refId": "B"
         }
@@ -507,9 +566,85 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["qingping", "air-quality"],
+  "tags": [
+    "qingping",
+    "air-quality"
+  ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "label": "Data Source",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(qingping_temperature_celsius, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instance",
+        "multi": false,
+        "name": "instance",
+        "options": [],
+        "query": {
+          "query": "label_values(qingping_temperature_celsius, instance)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(qingping_temperature_celsius{instance=~\"$instance\"}, device)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Device",
+        "multi": false,
+        "name": "device",
+        "options": [],
+        "query": {
+          "query": "label_values(qingping_temperature_celsius{instance=~\"$instance\"}, device)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
