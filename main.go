@@ -168,8 +168,7 @@ func main() {
 		config.UpdateInterval, config.Duration, config.Duration/3600)
 
 	// Setup periodic config messages to keep device reporting
-	// Send slightly before duration expires to maintain continuous reporting
-	ticker := time.NewTicker(time.Duration(config.Duration-60) * time.Second)
+	ticker := time.NewTicker(time.Duration(2*config.UpdateInterval) * time.Second)
 	defer ticker.Stop()
 
 	go func() {
